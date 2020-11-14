@@ -166,7 +166,25 @@ impl<'a, I: Input> Lexer<'a, I> {
         };
         let start = self.cur_pos();
 
+        macro_rules! bump_and_return {
+            ($token:expr) => {{
+                self.input.bump();
+                return Ok(Some($token));
+            }};
+        }
+
         let token = match c {
+            '(' => bump_and_return!(tok!('(')),
+            ')' => bump_and_return!(tok!(')')),
+            ';' => bump_and_return!(tok!(';')),
+            ',' => bump_and_return!(tok!(',')),
+            '[' => bump_and_return!(tok!('[')),
+            ']' => bump_and_return!(tok!(']')),
+            '{' => bump_and_return!(tok!('{')),
+            '}' => bump_and_return!(tok!('}')),
+            '@' => bump_and_return!(tok!('@')),
+            '`' => bump_and_return!(tok!('`')),
+
             '#' => return self.read_token_number_sign(),
             // Identifier or keyword. '\uXXXX' sequences are allowed in
             // identifiers, so '\' also dispatches to that.
@@ -204,23 +222,6 @@ impl<'a, I: Input> Lexer<'a, I> {
                 return Ok(Some(tok!('.')));
             }
 
-            '(' | ')' | ';' | ',' | '[' | ']' | '{' | '}' | '@' => {
-                // These tokens are emitted directly.
-                self.input.bump();
-                return Ok(Some(match c {
-                    '(' => LParen,
-                    ')' => RParen,
-                    ';' => Semi,
-                    ',' => Comma,
-                    '[' => LBracket,
-                    ']' => RBracket,
-                    '{' => LBrace,
-                    '}' => RBrace,
-                    '@' => At,
-                    _ => unreachable!(),
-                }));
-            }
-
             '?' => match self.input.peek() {
                 Some('?') => {
                     self.input.bump();
@@ -236,11 +237,6 @@ impl<'a, I: Input> Lexer<'a, I> {
                     return Ok(Some(tok!('?')));
                 }
             },
-
-            '`' => {
-                self.bump();
-                return Ok(Some(tok!('`')));
-            }
 
             ':' => {
                 self.input.bump();

@@ -1,4 +1,7 @@
 macro_rules! tok {
+    (';') => {
+        crate::token::Token::Semi
+    };
     ('`') => {
         crate::token::Token::BackQuote
     };
